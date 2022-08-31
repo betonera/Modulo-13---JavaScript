@@ -1,81 +1,87 @@
-function calcularMedia( notas ) {
+const fields = document.querySelectorAll("[required]")
 
-    let soma = 0;
-    for( c = 0; c < notas.length; c++) {
-        soma += notas[c];
-    }
-
-    media = soma / notas.length;
-
-    return media;
-
-}
-
-let media; // escopo global
-
-function aprovacao( notas ) {
-
-    let media = calcularMedia( notas ); // escopo da função
-
-    let condicao = media >= 8 ? "aprovado" : "reprovado";
-
-    return 'Média: ' + media + ' - Resultado: ' + condicao;
-
-}
-
-
-// Função Recursivas
-
-function contagemRegressiva(numero){
-
-    console.log(numero);  
+function ValidateField(field) {
     
-    let proximoNumero = numero - 1;
+    function verifyErrors() {
+        let foundError = false;
 
-    if(proximoNumero > 0)
-        contagemRegressiva(proximoNumero);
+        for(let error in field.validity) {
+           
+            if (field.validity[error] && !field.validity.valid ) {
+                foundError = error
+            }
+        }
+        return foundError;
+    }
+
+    function customMessage(typeError) {
+        const messages = {
+            text: {
+                valueMissing: "Por favor, preencha este campo!!!"
+            },
+            email: {
+                valueMissing: "Email é obrigatório!!",
+                typeMismatch: "Por favor, preencha um email válido!!"
+            }
+        }
+
+        return messages[field.type][typeError]
+    }
+
+    function setCustomMessage(message) {
+        const spanError = field.parentNode.querySelector("span.error")
+        
+        if (message) {
+            spanError.classList.add("active")
+            spanError.innerHTML = message
+        } else {
+            spanError.classList.remove("active")
+            spanError.innerHTML = ""
+        }
+    }
+
+    return function() {
+
+        const error = verifyErrors()
+
+        if(error) {
+            const message = customMessage(error)
+
+            field.style.borderColor = "red"
+            setCustomMessage(message)
+        } else {
+            field.style.borderColor = "green"
+            setCustomMessage()
+        }
+    }
+}
+
+
+function customValidation(event) {
+
+    const field = event.target
+    const validation = ValidateField(field)
+
+    validation()
 
 }
 
-// contagemRegressiva(50);
+for( field of fields ){
+    field.addEventListener("invalid", event => { 
+        
+        event.preventDefault()
 
-document.addEventListener('submit', function( evento ){
+        customValidation(event)
+    })
+    field.addEventListener("blur", customValidation)
+}
 
-    evento.preventDefault();
-    evento.stopPropagation();
 
-    let formulario = document.getElementById('formulario-01');
+document.querySelector("form")
+.addEventListener("submit", event => {
+    console.log("enviar o formulário")
 
-    let dados = new FormData(formulario);
+    
+    event.preventDefault()
+})
 
-    let objeto = {};
-
-    let notas = [];
-
-    for(let key of dados.keys()) {
-        objeto[key] = dados.get(key);
-
-        // adicionar itens no array
-        notas.push( parseInt(dados.get(key)));
-
-    }
-
-    console.log(notas);
-
-    console.log(objeto);
-
-    texto = aprovacao(notas)
-
-    document.getElementById('resultado').innerHTML = texto;
-
-});
-
-document.getElementsByTagName('input').addEventListener('focusout', function(event) {
-
-    event.preventDefault();
-
-    if(this.value == ""){
-            document.querySelector('.mensagem').innerHTML = "verifique o preenchimento"
-            return false
-    }
-});
